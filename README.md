@@ -5,6 +5,12 @@ Own your data pipeline!
 Start by building an Analytics API service with Python, FastAPI, and Time-series Postgres with TimescaleDB
 
 
+# Run the project
+```
+PYTHONPATH=src uvicorn src.main:app --reload
+```
+
+
 
 ## Docker
 
