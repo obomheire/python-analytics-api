@@ -30,8 +30,8 @@ def create_event(payload: EventCreateSchema, session: Session = Depends(get_sess
 
 # GET /api/events (get all events)
 @router.get("/", response_model=EventListSchema)
-def get_events(session: Session = Depends(get_session)):
-    query = select(EventModel).order_by(EventModel.updated_at.desc()).limit(10)
+def get_events(limit: int = 10, session: Session = Depends(get_session)):
+    query = select(EventModel).order_by(EventModel.updated_at.desc()).limit(limit)
     # results = session.exec(query).all()
     results = session.exec(query).fetchall()  # fetch all the results
     return {
