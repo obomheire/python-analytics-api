@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 from typing import List
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import case, func
+from sqlalchemy import case, func, or_
 from sqlmodel import Session, select
 from server.db_session import get_session
 from .models import (
@@ -17,9 +17,7 @@ from .models import (
 router = APIRouter()
 
 
-# SEND DATA HERE
-# create view
-# POST /api/events/
+# POST /api/events (create event)
 @router.post("/", response_model=EventModel)
 def create_event(payload: EventCreateSchema, session: Session = Depends(get_session)):
     data = payload.model_dump()  # convert payload to dictionary
@@ -30,7 +28,7 @@ def create_event(payload: EventCreateSchema, session: Session = Depends(get_sess
     return obj
 
 
-# GET /api/events/12
+# GET /api/events (get all events)
 @router.get("/", response_model=EventListSchema)
 def get_events(session: Session = Depends(get_session)):
     query = select(EventModel).order_by(EventModel.updated_at.desc()).limit(10)
@@ -42,8 +40,8 @@ def get_events(session: Session = Depends(get_session)):
     }
 
 
-# GET /api/events/12
-@router.get("/{event_id}", response_model=EventModel)
+# GET /api/events/uuid (get one event)
+@router.get("/get-one/{event_id}", response_model=EventModel)
 def get_event(event_id: UUID, session: Session = Depends(get_session)):
     query = select(EventModel).where(EventModel.id == event_id)  # select the event
     result = session.exec(query).first()  # get the first result
@@ -52,7 +50,7 @@ def get_event(event_id: UUID, session: Session = Depends(get_session)):
     return result
 
 
-# UPDATE /api/events/12
+# UPDATE /api/events/uuid (update event)
 @router.put("/{event_id}", response_model=EventModel)
 def update_event(
     event_id: UUID, payload: EventUpdateSchema, session: Session = Depends(get_session)
@@ -70,7 +68,7 @@ def update_event(
     return result
 
 
-# DELETE /api/events/12
+# DELETE /api/events/uuid (delete event)
 @router.delete("/{event_id}", response_model=EventModel)
 def delete_event(event_id: UUID, session: Session = Depends(get_session)):
 
@@ -78,3 +76,20 @@ def delete_event(event_id: UUID, session: Session = Depends(get_session)):
     session.delete(result)
     session.commit()
     return result
+
+
+# GET /api/events/search?search=test (search events)
+@router.get("/search", response_model=list[EventModel])
+def search_events(
+    search: str = Query(..., min_length=1), session: Session = Depends(get_session)
+):
+    query = select(EventModel).where(
+        or_(
+            EventModel.page.ilike(f"%{search}%"),
+            EventModel.description.ilike(f"%{search}%"),
+        )
+    )
+    results = session.exec(query).all()
+    if not results:
+        raise HTTPException(status_code=404, detail="No matching events found")
+    return results
