@@ -30,9 +30,17 @@ def create_event(payload: EventCreateSchema, session: Session = Depends(get_sess
 
 # GET /api/events (get all events)
 @router.get("/", response_model=EventListSchema)
-def get_events(limit: int = 10, session: Session = Depends(get_session)):
+def get_events(limit: int = 10,  search: str = Query(None, min_length=1), session: Session = Depends(get_session)):
     query = select(EventModel).order_by(EventModel.updated_at.desc()).limit(limit)
-    # results = session.exec(query).all()
+
+    if search:
+        query = query.where(
+            or_(
+                EventModel.page.ilike(f"%{search}%"),
+                EventModel.description.ilike(f"%{search}%"),
+            )
+        )
+
     results = session.exec(query).fetchall()  # fetch all the results
     return {
         "results": results,
@@ -76,20 +84,3 @@ def delete_event(event_id: UUID, session: Session = Depends(get_session)):
     session.delete(result)
     session.commit()
     return result
-
-
-# GET /api/events/search?search=test (search events)
-@router.get("/search", response_model=list[EventModel])
-def search_events(
-    search: str = Query(..., min_length=1), session: Session = Depends(get_session)
-):
-    query = select(EventModel).where(
-        or_(
-            EventModel.page.ilike(f"%{search}%"),
-            EventModel.description.ilike(f"%{search}%"),
-        )
-    )
-    results = session.exec(query).all()
-    if not results:
-        raise HTTPException(status_code=404, detail="No matching events found")
-    return results
