@@ -63,7 +63,7 @@ def get_event(event_id: UUID, session: Session = Depends(get_session)):
     query = select(EventModel).where(EventModel.id == event_id)  # select the event
     result = session.exec(query).first()  # get the first result
     if not result:
-        raise HTTPException(status_code=404, detail="Event not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
     return result
 
 
