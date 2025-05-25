@@ -28,7 +28,7 @@ def create_event(payload: EventCreateSchema, session: Session = Depends(get_sess
     return obj
 
 
-# GET /api/events (get all events)
+# GET /api/events?limit=10&search=test (get all events)
 @router.get("/", response_model=EventListSchema)
 def get_events(limit: int = 10,  search: str = Query(None, min_length=1), session: Session = Depends(get_session)):
     query = select(EventModel).order_by(EventModel.updated_at.desc()).limit(limit)
