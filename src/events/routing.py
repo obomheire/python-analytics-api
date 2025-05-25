@@ -2,10 +2,13 @@ import os
 from datetime import datetime, timedelta, timezone
 from typing import List
 from uuid import UUID
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
 from sqlalchemy import case, func, or_
 from sqlmodel import Session, select
+
 from server.db_session import get_session
+
 from .models import (
     EventCreateSchema,
     EventListSchema,
@@ -30,7 +33,11 @@ def create_event(payload: EventCreateSchema, session: Session = Depends(get_sess
 
 # GET /api/events?limit=10&search=test (get all events)
 @router.get("/", response_model=EventListSchema, status_code=status.HTTP_200_OK)
-def get_events(limit: int = 10,  search: str = Query(None, min_length=1), session: Session = Depends(get_session)):
+def get_events(
+    limit: int = 10,
+    search: str = Query(None, min_length=1),
+    session: Session = Depends(get_session),
+):
     query = select(EventModel).order_by(EventModel.updated_at.desc()).limit(limit)
 
     if search:
@@ -49,7 +56,9 @@ def get_events(limit: int = 10,  search: str = Query(None, min_length=1), sessio
 
 
 # GET /api/events/uuid (get one event)
-@router.get("/get-one/{event_id}", response_model=EventModel, status_code=status.HTTP_200_OK)
+@router.get(
+    "/get-one/{event_id}", response_model=EventModel, status_code=status.HTTP_200_OK
+)
 def get_event(event_id: UUID, session: Session = Depends(get_session)):
     query = select(EventModel).where(EventModel.id == event_id)  # select the event
     result = session.exec(query).first()  # get the first result
@@ -64,7 +73,7 @@ def update_event(
     event_id: UUID, payload: EventUpdateSchema, session: Session = Depends(get_session)
 ):
 
-    result = get_event(event_id, session) # Get the event to update
+    result = get_event(event_id, session)  # Get the event to update
 
     data = payload.model_dump(exclude_unset=True)  # only update provided fields
     for key, value in data.items():
