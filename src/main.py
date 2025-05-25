@@ -1,7 +1,7 @@
 from contextlib import asynccontextmanager
 from typing import Union
 
-from fastapi import FastAPI, Header
+from fastapi import FastAPI, Header, status
 from server.db_session import init_db
 from events import router as event_router
 
@@ -26,7 +26,7 @@ def read_item(item_id: int, q: Union[str, None] = None):
 
 
 # GET /get_headers (get headers)
-@app.get("/get_headers", status_code=500)
+@app.get("/get_headers", status_code=status.HTTP_200_OK)
 async def get_headers(
     accept: str = Header(None),
     content_type: str = Header(None),
