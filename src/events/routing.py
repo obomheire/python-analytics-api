@@ -68,7 +68,7 @@ def get_event(event_id: UUID, session: Session = Depends(get_session)):
 
 
 # UPDATE /api/events/uuid (update event)
-@router.put("/{event_id}", response_model=EventModel, status_code=status.HTTP_200_OK)
+@router.patch("/{event_id}", response_model=EventModel, status_code=status.HTTP_200_OK)
 def update_event(
     event_id: UUID, payload: EventUpdateSchema, session: Session = Depends(get_session)
 ):

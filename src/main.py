@@ -8,10 +8,12 @@ from events import router as event_router
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # before app startup up
+    print("Server is starting...")
     init_db()
     yield
     # clean up
-
+    print("Server is shutting down...")
+    
 app = FastAPI(lifespan=lifespan)
 app.include_router(event_router, prefix='/api/events')
 # /api/events
